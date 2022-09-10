@@ -1,15 +1,8 @@
-from ast import Return
-from crypt import methods
 import os
-from re import search
-from unicodedata import category
-from urllib import response
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import random
-from werkzeug import run_simple
-from flask import json
 
 from models import setup_db, Question, Category
 
@@ -104,7 +97,7 @@ def create_app(test_config=None):
     This removal will persist in the database and when you refresh the page.
     """
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
-    def delete_book(question_id):
+    def delete_question(question_id):
         try:
             question = Question.query.filter(
                 Question.id == question_id).one_or_none()
@@ -152,14 +145,9 @@ def create_app(test_config=None):
 
             question.insert()
 
-            selection = Question.query.order_by(Question.id).all()
-            list = paginate_questions(request, selection)
-
             return jsonify({
                 'success': True,
-                'created': question.id,
-                'questions': list,
-                'total_questions': len(Question.query.all())
+                'created': question.id
             })
 
         except:
@@ -178,19 +166,36 @@ def create_app(test_config=None):
 
     @app.route('/questions/search', methods=['POST'])
     def search_question():
-        body = request.get_json()
+        data = request.get_json()
 
-        search_term = body.get('search', None)
+        search_term = data.get("searchTerms", None)
 
-        search_results = Question.query.order_by(Question.id).filter(
-            Question.question.ilike("%{}%".format(search_term)))
-        results = paginate_questions(request, search_results)
+        # Return 422 status code if search_term is empty
+        if search_term == "":
+            abort(422)
 
-        return jsonify({
-            "success": True,
-            "questions": results,
-            "total_questions": len(search_results.all())
-        })
+        try:
+            # get all questions with the search_term substring
+            search_results = Question.query.filter(
+                Question.question.ilike("%{}%".format(search_term)))
+
+            # Return 404 status code where search results is empty
+            if len(search_results) == 0:
+                abort(404)
+
+            # else, paginate search results
+            results = paginate_questions(request, search_results)
+
+            # return jsonify object for successful response
+
+            return jsonify({
+                "success": True,
+                "questions": results,
+                "total_questions": len(search_results.all())
+            }), 200
+
+        except:
+            abort(404)
 
     """
     @TODO:
@@ -229,6 +234,26 @@ def create_app(test_config=None):
     and shown whether they were correct or not.
     """
 
+    @app.route('/quizzes')
+    def play_quizzes():
+        try:
+            request_data = request.get_json()
+            previous_questions = request.get("previous_questions", None)
+            category = request.get("quiz_category", None)
+
+            # if category is provided
+            if category:
+                questions = Question.query.filter_by(
+                    Question.category == category).all()
+                questions_list = paginate_questions(request, questions)
+
+            elif category is None:
+                questions = Question.query.order_by(Question.id).all()
+                questions_list = paginate_questions(request, questions)
+
+        except:
+            abort(404)
+
     """
     @TODO:
     Create error handlers for all expected errors
@@ -265,7 +290,5 @@ def create_app(test_config=None):
             "error": 500,
             "message": "Internal Server Error"
         }), 500
-
-    run_simple("localhost", 5000, app)
 
     return app
