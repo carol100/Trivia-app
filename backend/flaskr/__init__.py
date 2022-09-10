@@ -145,9 +145,14 @@ def create_app(test_config=None):
 
             question.insert()
 
+            selection = Question.query.order_by(Question.id).all()
+            questions_list = paginate_questions(request, selection)
+
             return jsonify({
                 'success': True,
-                'created': question.id
+                'created': question.id,
+                'questions': questions_list,
+                'total_questions': len(Question.query.all())
             })
 
         except:
@@ -168,7 +173,7 @@ def create_app(test_config=None):
     def search_question():
         data = request.get_json()
 
-        search_term = data.get("searchTerms", None)
+        search_term = data.get("searchTerm", None)
 
         # Return 422 status code if search_term is empty
         if search_term == "":
