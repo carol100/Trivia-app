@@ -241,18 +241,30 @@ def create_app(test_config=None):
     and shown whether they were correct or not.
     """
 
-    @app.route('/quizzes')
+    @app.route('/quizzes', methods=['POST'])
     def play_quizzes():
         try:
             request_data = request.get_json()
-            previous_questions = request.get("previous_questions", None)
-            category = request.get("quiz_category", None)
+        previous_questions = request_data.get("previous_questions", None)
+        category = request_data.get("quiz_category", None)
 
             # if category is provided
             if category:
-                questions = Question.query.filter_by(
-                    Question.category == category).all()
-                questions_list = paginate_questions(request, questions)
+            question = Question.query.filter(
+                Question.category == category['id']).order_by(func.random()).first()
+
+        elif not category:
+            question = Question.query.order_by(func.random()).one()
+            print(question)
+
+        if question is not None:
+
+            return jsonify(
+                {
+                    "success": True,
+                    "question": question.format(),
+                }
+            )
 
             elif category is None:
                 questions = Question.query.order_by(Question.id).all()
