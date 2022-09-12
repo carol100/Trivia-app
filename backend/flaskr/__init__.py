@@ -49,9 +49,7 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def get_all_categories():
         categories = Category.query.all()
-        result = {}
-        for category in categories:
-            result[category.id] = category.type
+        result = [category.format() for category in categories]
 
         return jsonify({
             'success': True,
@@ -88,6 +86,8 @@ def create_app(test_config=None):
                 "questions": questions_list,
                 "total_questions": len(Question.query.all()),
                 "categories": result
+            }
+        )
             }
         )
 
