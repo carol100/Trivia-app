@@ -184,7 +184,7 @@ def create_app(test_config=None):
         try:
             # get all questions with the search_term substring
             search_results = Question.query.filter(
-                Question.question.ilike("%{}%".format(search_term)))
+                Question.question.ilike("%{}%".format(search_term))).all()
 
             # Return 404 status code where search results is empty
             if len(search_results) == 0:
@@ -198,7 +198,7 @@ def create_app(test_config=None):
             return jsonify({
                 "success": True,
                 "questions": results,
-                "total_questions": len(search_results.all())
+                "total_questions": len(search_results)
             }), 200
 
         except:
