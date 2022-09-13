@@ -35,7 +35,11 @@ class TriviaTestCase(unittest.TestCase):
             }
 
             self.search = {
-                "question": "world"
+                "searchTerm": "new"
+            }
+
+            self.play = {
+                "quiz_category": 2
             }
 
     def tearDown(self):
@@ -109,6 +113,22 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_question(self):
         res = self.client().post("questions/search", json=self.search)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data["success"], True)
+        self.assertTrue(data["questions"])
+
+    def test_if_search_result_is_none(self):
+        res = self.client().post("questions/search", json=self.search)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 404)
+        self.assertEqual(data["success"], False)
+        self.assertEqual(data["message"], "Not Found")
+
+    def test_search_question(self):
+        res = self.client().post("quizzes", json=self.play)
         data = json.loads(res.data)
 
         self.assertEqual(res.status_code, 200)
