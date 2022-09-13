@@ -75,7 +75,9 @@ def create_app(test_config=None):
         selection = Question.query.order_by('category').all()
         questions_list = paginate_questions(request, selection)
         categories = Category.query.all()
-        result = [category.format() for category in categories]
+        result = {}
+        for category in categories:
+            result[category.id] = category.type
 
         if len(questions_list) == 0:
             abort(404)
@@ -85,9 +87,8 @@ def create_app(test_config=None):
                 "success": True,
                 "questions": questions_list,
                 "total_questions": len(Question.query.all()),
-                "categories": result
-            }
-        )
+                "categories": result,
+                "current_category": category.type
             }
         )
 
@@ -190,6 +191,10 @@ def create_app(test_config=None):
             if len(search_results) == 0:
                 abort(404)
 
+            current_category_id = search_results[0].category
+            current_category = Category.query.filter(
+                Category.id == current_category_id).first()
+
             # else, paginate search results
             results = paginate_questions(request, search_results)
 
@@ -198,7 +203,8 @@ def create_app(test_config=None):
             return jsonify({
                 "success": True,
                 "questions": results,
-                "total_questions": len(search_results)
+                "total_questions": len(search_results),
+                "current_category": current_category.type
             }), 200
 
         except:
@@ -218,6 +224,9 @@ def create_app(test_config=None):
             Question.category == category_id).all()
         questions_list = paginate_questions(request, selection)
 
+        current_category = Category.query.filter(
+            Category.id == category_id).first()
+
         if len(questions_list) == 0:
             abort(404)
 
@@ -225,7 +234,8 @@ def create_app(test_config=None):
             {
                 "success": True,
                 "questions": questions_list,
-                "total_questions": len(selection)
+                "total_questions": len(selection),
+                "current_category": current_category.type
             }
         )
 
