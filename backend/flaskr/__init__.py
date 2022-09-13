@@ -1,6 +1,9 @@
 import os
+from unicodedata import category
+from urllib import response
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 from flask_cors import CORS
 import random
 
@@ -49,7 +52,9 @@ def create_app(test_config=None):
     @app.route('/categories', methods=['GET'])
     def get_all_categories():
         categories = Category.query.all()
-        result = [category.format() for category in categories]
+        result = {}
+        for category in categories:
+            result[category.id] = category.type
 
         return jsonify({
             'success': True,
@@ -255,30 +260,41 @@ def create_app(test_config=None):
     def play_quizzes():
         try:
             request_data = request.get_json()
-        previous_questions = request_data.get("previous_questions", None)
-        category = request_data.get("quiz_category", None)
+            previous_questions = request_data.get("previous_questions", None)
+            category = request_data.get("quiz_category", None)
+
+            # if not previous_questions:
+            #     previous_questions = []
 
             # if category is provided
-            if category:
-            question = Question.query.filter(
-                Question.category == category['id']).order_by(func.random()).first()
+            if category['id']:
+                question = Question.query.filter(
+                    Question.category == category['id']).filter(~Question.id.in_(previous_questions)).order_by(func.random()).first()
 
-        elif not category:
-            question = Question.query.order_by(func.random()).one()
-            print(question)
+            else:
 
-        if question is not None:
+                question = Question.query.filter(~Question.id.in_(
+                    previous_questions)).order_by(func.random()).first()
 
-            return jsonify(
-                {
-                    "success": True,
-                    "question": question.format(),
-                }
-            )
+            if question:
+                previous_questions.append(question.id)
 
-            elif category is None:
-                questions = Question.query.order_by(Question.id).all()
-                questions_list = paginate_questions(request, questions)
+                return jsonify(
+                    {
+                        "success": True,
+                        "question": question.format(),
+                        "previous_questions": previous_questions
+                    }
+                )
+
+            else:
+                return jsonify(
+                    {
+                        "success": True,
+                        "question": None,
+                        "previous_questions": previous_questions
+                    }
+                )
 
         except:
             abort(404)
