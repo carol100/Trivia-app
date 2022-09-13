@@ -90,6 +90,8 @@ You will need to provide detailed documentation of your API endpoints including 
 }
 ```
 
+  `GET '/api/v1.0/questions'`
+
 ## Testing
 
 Write at least one test for the success and at least one error behavior of each endpoint using the unittest library.
@@ -102,3 +104,171 @@ createdb trivia_test
 psql trivia_test < trivia.psql
 python test_flaskr.py
 ```
+## Api Documentation
+## API Reference
+
+### Getting Started
+- Base URL: `http://127.0.0.1:5000/`
+- Authentication: No authentication required.
+
+## Error Handling
+Returns json formatted errors
+
+{
+    "success": False, 
+    "error": 404,
+    "message": "Not Found"
+}
+
+Error requests include:
+Error 404,
+Error 422,
+Error 400,
+
+
+
+### Endpoints 
+
+
+#### GET /categories
+
+`GET '/api/v1.0/categories'`
+
+- Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
+- `curl http://127.0.0.1:5000/categories`
+- Request Arguments: None
+- Returns: An object with a single key, `categories`, that contains an object of `id: category_string` key: value pairs.
+
+```json
+{
+  "1": "Science",
+  "2": "Art",
+  "3": "Geography",
+  "4": "History",
+  "5": "Entertainment",
+  "6": "Sports"
+}
+
+```
+
+### GET /questions
+
+`GET '/api/v1.0/questions'`
+-returns a list of questions, total_number of questions, the current category and all categories
+-questions list returns 10 questions per page
+
+`curl http://127.0.0.1:5000/questions`
+
+"categories": [
+    {
+      "id": 1, 
+      "type": "Science"
+    }, 
+    {
+      "id": 2, 
+      "type": "Art"
+    }],
+    "questions": [
+    {
+      "answer": "The Liver", 
+      "category": 1, 
+      "difficulty": 4, 
+      "id": 20, 
+      "question": "What is the heaviest organ in the human body?"
+    }, 
+    {
+      "answer": "hey", 
+      "category": 1, 
+      "difficulty": 5, 
+      "id": 25, 
+      "question": "new"
+    }, 
+    {
+      "answer": "Blood", 
+      "category": 1, 
+      "difficulty": 4, 
+      "id": 22, 
+      "question": "Hematology is a branch of medicine involving the study of what?"
+    }],
+  "success": true, 
+  "total_questions": 20
+
+ ### POST /questions 
+ `POST '/api/v1.0/questions'`
+ -inserts a new question record into the database
+ -returns json response status_code, id of created entry
+
+  `curl -X POST -H "Content-Type: application/json" -d '{"question":"Neverwhere", "category":"2", "answer": "hhhhhh", "difficulty":"5"}' http://127.0.0.1:5000/questions`
+
+  #successful sample response:
+  {
+  "created": 26, 
+  "success": true,
+  "questions": [
+    {
+      "answer": "Lake Victoria", 
+      "category": 3, 
+      "difficulty": 2, 
+      "id": 13, 
+      "question": "What is the largest lake in Africa?"
+    }, 
+    {
+      "answer": "The Palace of Versailles", 
+      "category": 3, 
+      "difficulty": 3, 
+      "id": 14, 
+      "question": "In which royal palace would you find the Hall of Mirrors?"
+    }
+  ], 
+  "success": true, 
+  "total_questions": 22
+
+      }
+
+  #error sample response: 
+  {
+  "error": 422, 
+  "message": "Unprocessable", 
+  "success": false
+}
+
+
+### DELETE /questions
+`DELETE '/api/v1.0/questions/<int:question_id>`
+-deletes a question using the question id
+`curl -X DELETE http://127.0.0.1:5000/questions/27`
+
+{
+  "deleted": 27, 
+  "questions": [
+    {
+      "answer": "Apollo 13", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 2, 
+      "question": "What movie earned Tom Hanks his third straight Oscar nomination, in 1996?"
+    }, ............
+  ], 
+  "success": true, 
+  "total_questions": 21
+
+
+### POST /questions
+`POST '/api/v1.0/questions/search'`
+-search returns results based on a search term
+-search by any phrase
+` curl -X POST -H "Content-Type: application/json" -d'{"question": "new"}' http://127.0.0.1:5000/questions/search`
+
+If search results are empty, returns
+
+{
+  "error": 404, 
+  "message": "Not Found", 
+  "success": false
+}
+
+-successful search returns questions that have the search terms sub string
+
+
+### POST /quizzes
+
